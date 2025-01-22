@@ -26,10 +26,25 @@ tar -xzf executor-linux-*.tar.gz
 cd executor/executor/bin || exit
 
 # Step 6: Prompt for private key
-echo "Please enter your private key:"
+echo "Please enter your private key (this will not be displayed):"
 read -s PRIVATE_KEY_LOCAL
 
-# Step 7: Configure environment variables
+# Step 7: Prompt for Alchemy API Key
+echo "Do you have an Alchemy API key for Sepolia? (y/n)"
+read -r HAS_ALCHEMY_KEY
+
+if [ "$HAS_ALCHEMY_KEY" == "y" ]; then
+    echo "Please enter your Alchemy API key for Sepolia:"
+    read -r ALCHEMY_API_KEY
+    echo "Configuring Alchemy RPC URLs for Sepolia using your API key..."
+    export RPC_ENDPOINTS_ARBT="https://arb-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY"
+    export RPC_ENDPOINTS_BASE="https://base-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY"
+    export RPC_ENDPOINTS_OPTIMISM="https://opt-sepolia.g.alchemy.com/v2/$ALCHEMY_API_KEY"
+else
+    echo "No Alchemy API key provided. Default Sepolia RPC URLs will be used."
+fi
+
+# Step 8: Configure environment variables
 echo "Configuring environment variables..."
 export NODE_ENV=testnet
 export LOG_LEVEL=debug
@@ -40,25 +55,27 @@ export ENABLED_NETWORKS='arbitrum-sepolia,base-sepolia,optimism-sepolia,l1rn'
 export PRIVATE_KEY_LOCAL=$PRIVATE_KEY_LOCAL
 export EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=true
 
-# Step 8: Ask user if they want to run in the background
-echo "Do you want to run the t3rn Executor in the background? (y/n)"
+# Step 9: Ask user if they want to run in the background with screen
+echo "Do you want to run the t3rn Executor in the background using screen? (y/n)"
 read -r RUN_BACKGROUND
 
 if [ "$RUN_BACKGROUND" == "y" ]; then
-    # Run in the background using nohup
-    echo "Starting the t3rn Executor in the background..."
-    nohup ./executor > t3rn_executor.log 2>&1 &
-    echo "The t3rn Executor is now running in the background."
-    echo "You can view the logs with 'tail -f t3rn_executor.log'."
-    echo "To reattach to the background process, use the following commands:"
-    echo "1. Check for running processes: ps aux | grep executor"
-    echo "2. Reattach using 'fg' command."
+    # Ensure screen is installed
+    echo "Installing screen if not already installed..."
+    sudo apt-get install -y screen
+
+    # Start the process in a screen session
+    echo "Starting the t3rn Executor in a screen session..."
+    screen -dmS t3rn-executor ./executor
+    echo "The t3rn Executor is running in the background using screen."
+    echo "To reattach to the screen session, use the command:"
+    echo "    screen -r t3rn-executor"
 else
     # Run normally in the foreground
     echo "Starting the t3rn Executor in the foreground..."
     ./executor
 fi
 
-# Step 9: Success message
+# Step 10: Success message
 echo "t3rn Executor setup is complete!"
 
