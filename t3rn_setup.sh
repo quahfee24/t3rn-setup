@@ -44,7 +44,19 @@ else
     echo "No Alchemy API key provided. Default Sepolia RPC URLs will be used."
 fi
 
-# Step 8: Configure environment variables
+# Step 8: Ask user if they want to process orders via the API
+echo "Do you want to process orders using the t3rn API? (y/n)"
+read -r USE_API
+
+if [ "$USE_API" == "y" ]; then
+    echo "Using API for processing orders."
+    export EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=true
+else
+    echo "Processing orders via RPC."
+    export EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=false
+fi
+
+# Step 9: Configure environment variables
 echo "Configuring environment variables..."
 export NODE_ENV=testnet
 export LOG_LEVEL=debug
@@ -53,9 +65,8 @@ export EXECUTOR_PROCESS_ORDERS_ENABLED=true
 export EXECUTOR_PROCESS_CLAIMS_ENABLED=true
 export ENABLED_NETWORKS='arbitrum-sepolia,base-sepolia,optimism-sepolia,l1rn'
 export PRIVATE_KEY_LOCAL=$PRIVATE_KEY_LOCAL
-export EXECUTOR_PROCESS_PENDING_ORDERS_FROM_API=true
 
-# Step 9: Ask user if they want to run in the background with screen
+# Step 10: Ask user if they want to run in the background with screen
 echo "Do you want to run the t3rn Executor in the background using screen? (y/n)"
 read -r RUN_BACKGROUND
 
@@ -76,6 +87,6 @@ else
     ./executor
 fi
 
-# Step 10: Success message
+# Step 11: Success message
 echo "t3rn Executor setup is complete!"
 
